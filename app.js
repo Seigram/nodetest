@@ -25,13 +25,23 @@ const { sequelize } = require('./models');
 const passportConfig = require('./passport');
 const logger = require('./logger');
 
+/*const app = express();
+    express: app,
+    app.set('port', process.env.PORT || 8001);//나중에는 80 443으로 배포할거임
+    app.set('view engine', 'html');//nunjucks 임시용
+    nunjucks.configure('views', {
+    watch: true,
+});*/
+
 const app = express();
-app.set('port', process.env.PORT || 8001);//나중에는 80 443으로 배포할거임
-app.set('view engine', 'html');//nunjucks 임시용
+passportConfig(); // 패스포트 설정
+app.set('port', process.env.PORT || 80);
+app.set('view engine', 'html');
 nunjucks.configure('views', {
     express: app,
     watch: true,
 });
+
 
 sequelize.sync({ force: false }) //true면 테이블 지워졌다 다시생성 Data보관은 alter
     .then(() => {
@@ -96,9 +106,12 @@ app.use((req, res, next) => {
 
 //에러처리 next 필수
 app.use((err, req, res, next) => {
-    res.locals.message = err.message;//템플릿엔진
-    res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};//배포모드일때는 스택안보이게
-    res.status(err.status || 500).render('error');
+    console.error(err);
+    res.locals.message = err.message;
+    res.locals.error = process.env.NODE_ENV !== 'production' ? err : {};
+    res.status(err.status || 500);
+    res.render('error');
 });
+
 
 module.exports = app
